@@ -20,6 +20,31 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 
+# Player
+class Player(pygame.sprite.Sprite):
+    
+    # Construtor
+    def __init__(self):
+        
+        #Classe Pai
+        pygame.sprite.Sprite.__init__(self)
+        
+        #Carregando a imagem de fundo
+        player_img = pygame.image.load(path.join(img_dir, 'playerShip1_orange.png')).convert()
+        self.image = player_img
+        
+        #Ajuste tamanho
+        self.image = pygame.transform.scale(player_img,(50,38))
+        
+        #Deixando transparente
+        self.image.set_colorkey(BLACK)
+        
+        #Posicionamento
+        self.rect = self.image.get_rect()
+        
+        self.rect.centerx = WIDTH / 2
+        self.rect.bottom = HEIGHT - 10
+        
 # Inicialização do Pygame.
 pygame.init()
 pygame.mixer.init()
@@ -57,6 +82,7 @@ try:
         # A cada loop, redesenha o fundo e os sprites
         screen.fill(BLACK)
         screen.blit(background, background_rect)
+        all_sprites.draw(screen)
         
         # Depois de desenhar tudo, inverte o display.
         pygame.display.flip()
