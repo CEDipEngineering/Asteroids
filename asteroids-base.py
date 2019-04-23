@@ -4,10 +4,17 @@
 import pygame
 from os import path
 import random
+import time
 
+pygame.init()
+pygame.mixer.init()
 # Estabelece a pasta que contem as figuras.
 img_dir = path.join(path.dirname(__file__), 'img')
+snd_dir = path.join(path.dirname(__file__), 'snd')
 
+pygame.mixer.music.load(path.join(snd_dir,'tgfcoder-FrozenJam-SeamlessLoop.ogg' ))
+pygame.mixer.music.set_volume(0.4)
+boom_sound = pygame.mixer.Sound(path.join(snd_dir, 'expl3.wav'))
 # Dados gerais do jogo.
 WIDTH = 480 # Largura da tela
 HEIGHT = 600 # Altura da tela
@@ -54,6 +61,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.centerx = WIDTH / 2
         self.rect.bottom = HEIGHT - 10
         self.speedx = 0
+        self.radius = 25
     
     def update(self):
         self.rect.x += self.speedx
@@ -79,6 +87,7 @@ class Mob(pygame.sprite.Sprite):
         self.rect.centery = randy()
         self.yspeed = randyspeed()
         self.xspeed = randxspeed()
+        self.radius = int(self.rect.width * .85 / 2)
         
     def update(self):
         self.rect.x += self.xspeed
@@ -91,8 +100,7 @@ class Mob(pygame.sprite.Sprite):
             self.yspeed = randyspeed()
         
 # Inicialização do Pygame.
-pygame.init()
-pygame.mixer.init()
+
 
 # Tamanho da tela.
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -132,9 +140,19 @@ all_sprites.add(mob6)
 all_sprites.add(mob7)
 all_sprites.add(mob8)
 
+mobs = pygame.sprite.Group()
+mobs.add(mob)
+mobs.add(mob2)
+mobs.add(mob3)
+mobs.add(mob4)
+mobs.add(mob5)
+mobs.add(mob6)
+mobs.add(mob7)
+mobs.add(mob8)
+
 # Comando para evitar travamentos.
 try:
-    
+    pygame.mixer.music.play(loops=-1)
     # Loop principal.
     running = True
     while running:
@@ -160,8 +178,12 @@ try:
                 if event.key == pygame.K_RIGHT:
                     player.speedx = 0
         all_sprites.update()
-        
-        
+        hits = pygame.sprite.spritecollide(player, mobs, False, pygame.sprite.collide_circle)
+        if hits:
+            boom_sound.play()
+            time.sleep(1)
+            
+            running = False
         # A cada loop, redesenha o fundo e os sprites
         
         
