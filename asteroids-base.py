@@ -3,6 +3,7 @@
 # Importando as bibliotecas necessárias.
 import pygame
 from os import path
+import random
 
 # Estabelece a pasta que contem as figuras.
 img_dir = path.join(path.dirname(__file__), 'img')
@@ -21,6 +22,14 @@ BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 
 # Player
+def randx():
+    return random.randrange(0,WIDTH)
+def randy():
+    return random.randrange(-100,-40)
+def randxspeed():
+    return random.randrange(-2,2)
+def randyspeed():
+    return random.randrange(5,12)
 class Player(pygame.sprite.Sprite):
     
     # Construtor
@@ -44,6 +53,42 @@ class Player(pygame.sprite.Sprite):
         
         self.rect.centerx = WIDTH / 2
         self.rect.bottom = HEIGHT - 10
+        self.speedx = 0
+    
+    def update(self):
+        self.rect.x += self.speedx
+        
+        if self.rect.right > WIDTH:
+            self.rect.right = WIDTH
+        if self.rect.left < 0:
+            self.rect.left = 0
+            
+class Mob(pygame.sprite.Sprite):
+    
+    
+    def __init__(self):
+        
+        pygame.sprite.Sprite.__init__(self)
+        
+        mob_img = pygame.image.load(path.join(img_dir, 'meteorBrown_med1.png')).convert()
+        self.image = mob_img
+        
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = randx()
+        self.rect.centery = randy()
+        self.yspeed = randyspeed()
+        self.xspeed = randxspeed()
+        
+    def update(self):
+        self.rect.x += self.xspeed
+        self.rect.y += self.yspeed
+        
+        if self.rect.bottom > HEIGHT:
+            self.rect.centerx = randx()
+            self.rect.centery = randy()
+            self.xspeed = randxspeed()
+            self.yspeed = randyspeed()
         
 # Inicialização do Pygame.
 pygame.init()
@@ -62,6 +107,31 @@ clock = pygame.time.Clock()
 background = pygame.image.load(path.join(img_dir, 'starfield.png')).convert()
 background_rect = background.get_rect()
 
+#Cria um player do tipo Player
+player = Player()
+
+#Cria um mob do tipo Mob
+
+mob = Mob()
+mob2 = Mob()
+mob3 = Mob()
+mob4 = Mob()
+mob5 = Mob()
+mob6 = Mob()
+mob7 = Mob()
+mob8 = Mob()
+#Cria um grupo de sprites
+all_sprites = pygame.sprite.Group()
+all_sprites.add(player)
+all_sprites.add(mob)
+all_sprites.add(mob2)
+all_sprites.add(mob3)
+all_sprites.add(mob4)
+all_sprites.add(mob5)
+all_sprites.add(mob6)
+all_sprites.add(mob7)
+all_sprites.add(mob8)
+
 # Comando para evitar travamentos.
 try:
     
@@ -78,11 +148,27 @@ try:
             # Verifica se foi fechado
             if event.type == pygame.QUIT:
                 running = False
-    
+            
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    player.speedx = -8
+                if event.key == pygame.K_RIGHT:
+                    player.speedx = 8
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT:
+                    player.speedx = 0
+                if event.key == pygame.K_RIGHT:
+                    player.speedx = 0
+        all_sprites.update()
+        
+        
         # A cada loop, redesenha o fundo e os sprites
+        
+        
         screen.fill(BLACK)
         screen.blit(background, background_rect)
         all_sprites.draw(screen)
+        
         
         # Depois de desenhar tudo, inverte o display.
         pygame.display.flip()
