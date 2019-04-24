@@ -15,6 +15,8 @@ snd_dir = path.join(path.dirname(__file__), 'snd')
 pygame.mixer.music.load(path.join(snd_dir,'tgfcoder-FrozenJam-SeamlessLoop.ogg' ))
 pygame.mixer.music.set_volume(0.4)
 boom_sound = pygame.mixer.Sound(path.join(snd_dir, 'expl3.wav'))
+shot_sound = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
+destroy_asteroid_sound = pygame.mixer.Sound(path.join(snd_dir,'expl6.wav')) 
 # Dados gerais do jogo.
 WIDTH = 480 # Largura da tela
 HEIGHT = 600 # Altura da tela
@@ -98,7 +100,29 @@ class Mob(pygame.sprite.Sprite):
             self.rect.centery = randy()
             self.xspeed = randxspeed()
             self.yspeed = randyspeed()
+      
         
+        
+        
+class Bullet(pygame.sprite.Sprite):
+    
+    def __init__(self, x , y):
+        
+        pygame.sprite.Sprite.__init__(self)
+        
+        bullet_img = pygame.image.load(path.join(img_dir, "laserRed16.png")).convert()
+        self.image = bullet_img
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = x
+        self.rect.bottom = y
+        self.yspeed = -10
+    def update(self):
+        self.rect.centery += self.yspeed
+    
+        if self.rect.bottom < 0:
+            self.kill()
+            
 # Inicialização do Pygame.
 
 
@@ -120,35 +144,19 @@ player = Player()
 
 #Cria um mob do tipo Mob
 
-mob = Mob()
-mob2 = Mob()
-mob3 = Mob()
-mob4 = Mob()
-mob5 = Mob()
-mob6 = Mob()
-mob7 = Mob()
-mob8 = Mob()
+
 #Cria um grupo de sprites
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
-all_sprites.add(mob)
-all_sprites.add(mob2)
-all_sprites.add(mob3)
-all_sprites.add(mob4)
-all_sprites.add(mob5)
-all_sprites.add(mob6)
-all_sprites.add(mob7)
-all_sprites.add(mob8)
 
 mobs = pygame.sprite.Group()
-mobs.add(mob)
-mobs.add(mob2)
-mobs.add(mob3)
-mobs.add(mob4)
-mobs.add(mob5)
-mobs.add(mob6)
-mobs.add(mob7)
-mobs.add(mob8)
+
+bullets = pygame.sprite.Group()
+
+for i in range(8):
+    m = Mob()
+    mobs.add(m)
+    all_sprites.add(m)
 
 # Comando para evitar travamentos.
 try:
@@ -172,18 +180,33 @@ try:
                     player.speedx = -8
                 if event.key == pygame.K_RIGHT:
                     player.speedx = 8
+                     
+                    
+                if event.key == pygame.K_SPACE:
+                    bullet = Bullet(player.rect.centerx, player.rect.top)
+                    all_sprites.add(bullet)
+                    bullets.add(bullet)
+                    shot_sound.play()
+                    
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
                     player.speedx = 0
                 if event.key == pygame.K_RIGHT:
                     player.speedx = 0
         all_sprites.update()
-        hits = pygame.sprite.spritecollide(player, mobs, False, pygame.sprite.collide_circle)
-        if hits:
+        asteroid_hits = pygame.sprite.spritecollide(player, mobs, False, pygame.sprite.collide_circle)
+        if asteroid_hits:
             boom_sound.play()
             time.sleep(1)
-            
+        
             running = False
+       
+        bullet_hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
+        for hits in bullet_hits:
+            destroy_asteroid_sound.play()
+            new_mob = Mob()
+            all_sprites.add(new_mob)
+            mobs.add(new_mob)
         # A cada loop, redesenha o fundo e os sprites
         
         
