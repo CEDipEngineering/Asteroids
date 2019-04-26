@@ -8,7 +8,7 @@ import time
 
 pygame.init()
 pygame.mixer.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
 # Estabelece a pasta que contem as figuras.
 img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'snd')
@@ -19,7 +19,7 @@ pygame.mixer.music.set_volume(0.4)
 WIDTH = 480 # Largura da tela
 HEIGHT = 600 # Altura da tela
 FPS = 60 # Frames por segundo
-
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 # Define algumas variáveis com as cores básicas
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -36,6 +36,14 @@ def load_assets(img_dir,snd_dir):
     assets['destroy_asteroid_snd'] = pygame.mixer.Sound(path.join(snd_dir,'expl6.wav')) 
     assets['player_hit_snd'] = pygame.mixer.Sound(path.join(snd_dir, 'expl3.wav'))
     assets['shot_snd'] = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
+    explosion_anim=[]
+    for i in range(9):
+        filename = 'regularExplosion0{}.png'.format(i)
+        img = pygame.image.load(path.join(img_dir,filename)).convert()
+        img = pygame.transform.scale(img,(32,32))
+        img.set_colorkey(BLACK)
+        explosion_anim.append(img)
+    assets['explosion_anim'] = explosion_anim
     return assets
 
 assets = load_assets(img_dir,snd_dir)
@@ -133,6 +141,44 @@ class Bullet(pygame.sprite.Sprite):
         if self.rect.bottom < 0:
             self.kill()
             
+            
+class Explosion(pygame.sprite.Sprite):
+    
+    def __init__(self, center, explosion_anim):
+        
+        pygame.sprite.Sprite.__init__(self)
+        
+        
+        self.explosion_anim = explosion_anim
+        
+        self.frame = 0
+        self.image = explosion_anim[self.frame]
+        self.rect = self.image.get_rect()
+        self.rect.center = center
+        self.last_update = pygame.time.get_ticks()
+        
+        self.frame_ticks = 50
+        
+    def update(self):
+        
+        now = pygame.time.get_ticks()
+        elapsed_ticks = now - self.last_update
+        
+        
+        if elapsed_ticks > self.frame_ticks:
+            
+            self.last_update = now
+            
+            self.frame+=1
+            
+            if self.frame == len(self.explosion_anim):
+                self.kill()
+            else:
+                center = self.rect.center
+                self.image = self.explosion_anim[self.frame]
+                self.rect = self.image.get_rect()
+                self.rect.center = center
+        
 # Inicialização do Pygame.
 
 
@@ -167,7 +213,7 @@ for i in range(8):
     m = Mob(assets['asteroid_img'])
     mobs.add(m)
     all_sprites.add(m)
-
+#time.sleep(2)
 # Comando para evitar travamentos.
 try:
     pygame.mixer.music.play(loops=-1)
@@ -217,6 +263,10 @@ try:
             new_mob = Mob(assets['asteroid_img'])
             all_sprites.add(new_mob)
             mobs.add(new_mob)
+            
+            
+            explosao = Explosion(hits.rect.center, assets['explosion_anim'])
+            all_sprites.add(explosao)
         # A cada loop, redesenha o fundo e os sprites
         
         
