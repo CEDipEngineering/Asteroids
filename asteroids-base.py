@@ -8,15 +8,13 @@ import time
 
 pygame.init()
 pygame.mixer.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 # Estabelece a pasta que contem as figuras.
 img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'snd')
 
 pygame.mixer.music.load(path.join(snd_dir,'tgfcoder-FrozenJam-SeamlessLoop.ogg' ))
 pygame.mixer.music.set_volume(0.4)
-boom_sound = pygame.mixer.Sound(path.join(snd_dir, 'expl3.wav'))
-shot_sound = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
-destroy_asteroid_sound = pygame.mixer.Sound(path.join(snd_dir,'expl6.wav')) 
 # Dados gerais do jogo.
 WIDTH = 480 # Largura da tela
 HEIGHT = 600 # Altura da tela
@@ -29,7 +27,21 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
+def load_assets(img_dir,snd_dir):   
+    assets= {}
+    assets['player_img'] = pygame.image.load(path.join(img_dir, 'playerShip1_orange.png')).convert()
+    assets['asteroid_img'] = pygame.image.load(path.join(img_dir, 'meteorBrown_med1.png')).convert()
+    assets['bullet_img'] = pygame.image.load(path.join(img_dir, "laserRed16.png")).convert()
+    assets['background_img'] = pygame.image.load(path.join(img_dir, 'starfield.png')).convert()
+    assets['destroy_asteroid_snd'] = pygame.mixer.Sound(path.join(snd_dir,'expl6.wav')) 
+    assets['player_hit_snd'] = pygame.mixer.Sound(path.join(snd_dir, 'expl3.wav'))
+    assets['shot_snd'] = pygame.mixer.Sound(path.join(snd_dir, 'pew.wav'))
+    return assets
 
+assets = load_assets(img_dir,snd_dir)
+shot_sound = assets['shot_snd']
+boom_sound = assets['player_hit_snd']
+destroy_asteroid_sound = assets['destroy_asteroid_snd']
 # Player
 def randx():
     return random.randrange(0,WIDTH)
@@ -39,16 +51,16 @@ def randxspeed():
     return random.randrange(-2,2)
 def randyspeed():
     return random.randrange(5,12)
+
 class Player(pygame.sprite.Sprite):
     
     # Construtor
-    def __init__(self):
+    def __init__(self,player_img):
         
         #Classe Pai
         pygame.sprite.Sprite.__init__(self)
         
         #Carregando a imagem de fundo
-        player_img = pygame.image.load(path.join(img_dir, 'playerShip1_orange.png')).convert()
         self.image = player_img
         
         #Ajuste tamanho
@@ -76,11 +88,10 @@ class Player(pygame.sprite.Sprite):
 class Mob(pygame.sprite.Sprite):
     
     
-    def __init__(self):
+    def __init__(self,mob_img):
         
         pygame.sprite.Sprite.__init__(self)
         
-        mob_img = pygame.image.load(path.join(img_dir, 'meteorBrown_med1.png')).convert()
         self.image = mob_img
         
         self.image.set_colorkey(BLACK)
@@ -106,11 +117,10 @@ class Mob(pygame.sprite.Sprite):
         
 class Bullet(pygame.sprite.Sprite):
     
-    def __init__(self, x , y):
+    def __init__(self, x , y, bullet_img):
         
         pygame.sprite.Sprite.__init__(self)
         
-        bullet_img = pygame.image.load(path.join(img_dir, "laserRed16.png")).convert()
         self.image = bullet_img
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
@@ -127,7 +137,7 @@ class Bullet(pygame.sprite.Sprite):
 
 
 # Tamanho da tela.
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
 
 # Nome do jogo
 pygame.display.set_caption("Asteroids")
@@ -136,11 +146,11 @@ pygame.display.set_caption("Asteroids")
 clock = pygame.time.Clock()
 
 # Carrega o fundo do jogo
-background = pygame.image.load(path.join(img_dir, 'starfield.png')).convert()
+background = assets['background_img']
 background_rect = background.get_rect()
 
 #Cria um player do tipo Player
-player = Player()
+player = Player(assets['player_img'])
 
 #Cria um mob do tipo Mob
 
@@ -154,7 +164,7 @@ mobs = pygame.sprite.Group()
 bullets = pygame.sprite.Group()
 
 for i in range(8):
-    m = Mob()
+    m = Mob(assets['asteroid_img'])
     mobs.add(m)
     all_sprites.add(m)
 
@@ -183,7 +193,7 @@ try:
                      
                     
                 if event.key == pygame.K_SPACE:
-                    bullet = Bullet(player.rect.centerx, player.rect.top)
+                    bullet = Bullet(player.rect.centerx, player.rect.top, assets['bullet_img'])
                     all_sprites.add(bullet)
                     bullets.add(bullet)
                     shot_sound.play()
@@ -204,7 +214,7 @@ try:
         bullet_hits = pygame.sprite.groupcollide(mobs, bullets, True, True)
         for hits in bullet_hits:
             destroy_asteroid_sound.play()
-            new_mob = Mob()
+            new_mob = Mob(assets['asteroid_img'])
             all_sprites.add(new_mob)
             mobs.add(new_mob)
         # A cada loop, redesenha o fundo e os sprites
